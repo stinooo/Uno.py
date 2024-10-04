@@ -1,5 +1,6 @@
 current libs we need 
-    ```py
+
+    ```
  pip install pygame
     ```
 
