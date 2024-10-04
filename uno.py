@@ -20,7 +20,7 @@ for color in colors:
         card_name = f"{color}_{value}"
         card_images[card_name] = pygame.image.load(f"./files/{card_name}.png")
 pygame.image.load(f"./files/Wild_Draw.png")
-pygame.image.load(f"./files/Wild.png.png")
+pygame.image.load(f"./files/Wild.png")
 # Define Card class
 class Card:
     def __init__(self, color, value):
