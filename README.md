@@ -1,8 +1,7 @@
 current libs we need 
-
-´´´
-pip install pygame   
-´´´
+    ```py
+ pip install pygame
+    ```
 
 
 https://itch.io/profile/alexder
