@@ -1,53 +1,113 @@
-import pygame
+import pygame, sys
 import random
+from button import Button
 
 # Initialize Pygame
 pygame.init()
 
+# Get screen size from system
+info = pygame.display.Info()
+screen_width, screen_height = info.current_w, info.current_h
+
 # Set up display
-screen = pygame.display.set_mode((800, 600))
+screen = pygame.display.set_mode((screen_width-100, screen_height-100), pygame.RESIZABLE)
 pygame.display.set_caption("Uno Game")
 
-# Load background image
+# Load images
 background_image = pygame.image.load('./files/background.jpg')
 
-# Load card images
-card_images = {}
-colors = ['Red', 'Yellow', 'Green', 'Blue']
-values = list(range(0, 10)) + ['Skip', 'Reverse', 'Draw']
-for color in colors:
-    for value in values:
-        card_name = f"{color}_{value}"
-        card_images[card_name] = pygame.image.load(f"./files/{card_name}.png")
-pygame.image.load(f"./files/Wild_Draw.png")
-pygame.image.load(f"./files/Wild.png")
-# Define Card class
-class Card:
-    def __init__(self, color, value):
-        self.color = color
-        self.value = value
+# Create Resizer class to handle dynamic resizing
+class Resizer:
+    def __init__(self, original_width, original_height):
+        self.original_width = original_width
+        self.original_height = original_height
 
-    def __repr__(self):
-        return f"{self.color} {self.value}"
+    # Dynamically resize image based on current window size
+    def scale_image(self, image, window_width, window_height):
+        scale_x = window_width / self.original_width
+        scale_y = window_height / self.original_height
+        new_size = (int(image.get_width() * scale_x), int(image.get_height() * scale_y))
+        return pygame.transform.scale(image, new_size)
 
-    def get_image(self):
-        return card_images[f"{self.color}_{self.value}"]
+    # Dynamically scale position based on current window size
+    def scale_position(self, original_x, original_y, window_width, window_height):
+        scaled_x = int((original_x / self.original_width) * window_width)
+        scaled_y = int((original_y / self.original_height) * window_height)
+        return scaled_x, scaled_y
 
-# Main game loop
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+# Initialize resizer with the original screen dimensions
+resizer = Resizer(screen.get_width(), screen.get_height())
 
-    # Draw the background
-    screen.blit(background_image, (0, 0))
+# Load button images
+play_button_image = pygame.image.load("./files/Table_0.png")
+options_button_image = pygame.image.load("./files/Table_1.png")
+quit_button_image = pygame.image.load("./files/Table_2.png")
 
-    # Fill the screen with a color (e.g., white)
-    screen.fill((255, 255, 255))
+def get_font(size):  # Returns Press-Start-2P in the desired size
+    return pygame.font.Font("./files/font.ttf", size)
 
-    # Update the display
-    pygame.display.flip()
+def play():
+    return
 
-# Quit Pygame
-pygame.quit()
+def options():
+    return
+
+def main_menu():
+    global screen
+    while True:
+        screen_width, screen_height = screen.get_size()
+
+        # Dynamically resize background
+        resized_background = pygame.transform.scale(background_image, (screen_width, screen_height))
+
+        # Dynamically resize buttons using Resizer
+        resized_play_button = resizer.scale_image(play_button_image, screen_width, screen_height)
+        resized_options_button = resizer.scale_image(options_button_image, screen_width, screen_height)
+        resized_quit_button = resizer.scale_image(quit_button_image, screen_width, screen_height)
+
+        MENU_MOUSE_POS = pygame.mouse.get_pos()
+
+        MENU_TEXT = get_font(100).render("MAIN MENU", True, "#b68f40")
+        MENU_RECT = MENU_TEXT.get_rect(center=(screen_width // 2, screen_height // 6))
+
+        # Dynamically position buttons using Resizer
+        PLAY_BUTTON = Button(image=resized_play_button,
+                             pos=resizer.scale_position(640, 250, screen_width, screen_height),
+                             text_input="PLAY", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+
+        OPTIONS_BUTTON = Button(image=resized_options_button,
+                                pos=resizer.scale_position(640, 400, screen_width, screen_height),
+                                text_input="OPTIONS", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+
+        QUIT_BUTTON = Button(image=resized_quit_button,
+                             pos=resizer.scale_position(640, 550, screen_width, screen_height),
+                             text_input="QUIT", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+
+        # Draw background and buttons
+        screen.blit(resized_background, (0, 0))
+        screen.blit(MENU_TEXT, MENU_RECT)
+
+        for button in [PLAY_BUTTON, OPTIONS_BUTTON, QUIT_BUTTON]:
+            button.changeColor(MENU_MOUSE_POS)
+            button.update(screen)
+
+        # Event handling
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    play()
+                if OPTIONS_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    options()
+                if QUIT_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    pygame.quit()
+            elif event.type == pygame.VIDEORESIZE:
+                screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+
+        # Update the display
+        pygame.display.flip()
+
+# Start the main menu
+main_menu()
