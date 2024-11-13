@@ -1,5 +1,4 @@
-import pygame, sys
-import random
+import pygame
 
 kaarten = {
     "B0": pygame.image.load("files/Blue_0.png"),
@@ -84,7 +83,8 @@ class Kaart:
             scherm.blit(self.afbeelding, (self.x, self.y))
         else:
             scherm.blit(achterkant, (self.x, self.y))
-    gedeelde_kaarten = [
-    Kaart(kaarten["R1"], 100, 100, zichtbaar=True),
-    Kaart(kaarten["G2"], 150, 100, zichtbaar=True),
+            
+gedeelde_kaarten = [ 
+        Kaart(kaarten["R1"], 100, 100, zichtbaar=True),
+        Kaart(kaarten["G2"], 150, 100, zichtbaar=True),
     ]
