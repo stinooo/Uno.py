@@ -12,4 +12,3 @@ def Client(player1_pos, player2_pos):
         player2_pos[0], player2_pos[1] = map(int, data.split(','))
 
     client_socket.close()
-    

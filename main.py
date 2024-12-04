@@ -60,7 +60,7 @@ def main():
         screen.fill(WHITE)
         pygame.draw.rect(screen, RED, (*player1_pos, player_size, player_size))
         pygame.draw.rect(screen, BLUE, (*player2_pos, player_size, player_size))
-
+        
         pygame.display.flip()
         clock.tick(30)
 
