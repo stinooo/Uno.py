@@ -197,7 +197,6 @@ def main():
                     scroll_offset -= 20
 
         screen.fill(WHITE)
-<<<<<<< HEAD
 
         # Render hands
         if show_player1_hand:
@@ -220,11 +219,6 @@ def main():
         # Draw "Next Turn" button
         draw_button(screen, GREEN, 50, HEIGHT // 2 - button_height // 2 - 60, button_width, button_height, "Next Turn")
 
-=======
-        pygame.draw.rect(screen, RED, (*player1_pos, player_size, player_size))
-        pygame.draw.rect(screen, BLUE, (*player2_pos, player_size, player_size))
-        
->>>>>>> 9ecc3c24cf8f10c08e56c5ba6f2b09a2a7755b9b
         pygame.display.flip()
         clock.tick(30)
 
