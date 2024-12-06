@@ -2,24 +2,25 @@ import random
 import pygame
 
 colors = ["red", "yellow", "green", "blue"]
-values = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "Skip", "Reverse", "Draw Two"]
+values = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "Skip", "Reverse", "Draw"]
 special_cards = ["Wild", "Wild_Draw"]
+
+special_special = {"Wild", "Draw", "Wild_Draw", "Skip", "Reverse"}
+
 
 def create_deck():
     deck = []
     for color in colors:
         for value in values:
-            deck.append(f"{color} {value}")
+            deck.append(f"{color}_{value}")
             if value != "0":  # Two of each non-zero value per color
-                deck.append(f"{color} {value}")
+                deck.append(f"{color}_{value}")
     
     # Adding special cards (Wild and Wild Draw Four)
     deck.extend(special_cards * 4)
     
     random.shuffle(deck)
     return deck
-
-
 
 def draw_card(deck):
     if not deck:  # If deck is empty, reshuffle discard pile into deck
@@ -28,8 +29,13 @@ def draw_card(deck):
 
 def reshuffle_deck():
     global deck, discard_pile
-    deck = discard_pile[:-1]  # Keep the last card as starting discard
-    discard_pile = discard_pile[-1:]  # Start a new discard pile
+    last_card = discard_pile[-1]  # Keep the last card as starting discard
+    deck = discard_pile[:-1]  # All cards except the last one go back to the deck
+    discard_pile = [last_card]  # Start a new discard pile with the last card
+
+    while any(card in last_card for card in special_special):
+        random.shuffle(deck)
+    
     random.shuffle(deck)
 
 def start_game():
@@ -40,21 +46,30 @@ def start_game():
     discard_pile = [draw_card(deck)]
     return deck, discard_pile, player1_hand, player2_hand
 
-def render_hand(screen, hand, x, y):
+def render_hand(screen, hand, x, y, mouse_x, mouse_y):
     card_images = {}
+    card_width = 200
+    card_height = 300
     for i, card in enumerate(hand):
-        # Load card images only for the cards in hand
+        # Load and scale card images only for the cards in hand
         if card not in card_images:
-            card_images[card] = pygame.image.load(f"./files/{card}.png")
-        screen.blit(card_images[card], (x, y + i * 30))
+            card_image = pygame.image.load(f"./files/{card}.png")
+            card_images[card] = pygame.transform.scale(card_image, (card_width, card_height))
+        card_x = x + i * (card_width + 10)
+        card_y = y
+        if card_x <= mouse_x <= card_x + card_width and card_y <= mouse_y <= card_y + card_height:
+            card_y -= 10  # Move the card up when hovered
+        screen.blit(card_images[card], (card_x, card_y))
 
 def can_play(card, top_card):
-    card_color, card_value = card.split() if "Wild" not in card else ("Wild", card)
-    top_color, top_value = top_card.split() if "Wild" not in top_card else ("Wild", top_card)
+    if "Wild" in card:
+        return True
+    card_color, card_value = card.split('_')
+    top_color, top_value = top_card.split('_')
     return (
         card_color == top_color or
         card_value == top_value or
-        card_color == "Wild"
+        "Wild" in card
     )
 
 def play_turn(player_hand, top_card):
@@ -70,52 +85,20 @@ def play_turn(player_hand, top_card):
         player_hand.append(new_card)
         return f"draw {new_card}"
 
-def process_special_card(card, turn_order):
-    card_type = card.split()[1] if "Wild" not in card else card
+def process_special_card(card, turn_order, player_hands, current_player_index):
+    card_type = card.split('_')[1] if "Wild" not in card else card
     if card_type == "Skip":
-        return 2  # Skip next player
+        return (current_player_index + 2) % len(player_hands)  # Skip next player
     elif card_type == "Reverse":
         turn_order.reverse()
-        return 1  # Reverse changes direction but doesn't skip a turn
-    elif card_type == "Draw Two":
-        return "Draw Two"
+        return (current_player_index + 1) % len(player_hands)  # Reverse changes direction but doesn't skip a turn
+    elif card_type == "Draw":
+        next_player_index = (current_player_index + 1) % len(player_hands)
+        player_hands[next_player_index].extend([draw_card(deck) for _ in range(2)])
+        return (current_player_index + 1) % len(player_hands)
     elif card_type == "Wild_Draw":
-        return "Wild_Draw"
-
-def game_loop():
-    deck, discard_pile, player1_hand, player2_hand = start_game()
-    turn_order = [player1_hand, player2_hand]
-    current_index = 0
-    while True:
-        current_player = turn_order[current_index]
-        top_card = discard_pile[-1]
-        print(f"Top card: {top_card}")
-        print(f"Player {current_index + 1}'s turn with hand: {current_player}")
-        
-        played_card = play_turn(current_player, top_card)
-        print(f"Player {current_index + 1} played: {played_card}")
-        
-        # Process card effects if it's a special card
-        if "draw" not in played_card:
-            top_card = discard_pile[-1]
-            effect = process_special_card(top_card, turn_order)
-            if effect == 2:  # Skip
-                current_index = (current_index + effect) % len(turn_order)
-            elif effect == "Draw Two":
-                next_player = turn_order[(current_index + 1) % len(turn_order)]
-                next_player.extend(draw_card(deck) for _ in range(2))
-                current_index = (current_index + 1) % len(turn_order)
-            elif effect == "Wild Draw Four":
-                next_player = turn_order[(current_index + 1) % len(turn_order)]
-                next_player.extend(draw_card(deck) for _ in range(4))
-                current_index = (current_index + 1) % len(turn_order)
-            else:  # Reverse or normal play
-                current_index = (current_index + 1) % len(turn_order)
-        else:
-            # Draw a card, no special effect processing
-            current_index = (current_index + 1) % len(turn_order)
-        
-        # Check for win
-        if not current_player:
-            print(f"Player {current_index + 1} wins!")
-            break
+        next_player_index = (current_player_index + 1) % len(player_hands)
+        player_hands[next_player_index].extend([draw_card(deck) for _ in range(4)])
+        return (current_player_index + 1) % len(player_hands)
+    else:
+        return (current_player_index + 1) % len(player_hands)
