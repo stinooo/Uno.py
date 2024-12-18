@@ -1,6 +1,6 @@
 import pygame
 import sys
-from uno_game import start_game, render_hand, play_turn, process_special_card, draw_card, can_play
+from uno_game import is_reverse_card, start_game, render_hand, draw_card, can_play
 
 # Initialize Pygame
 pygame.init()
@@ -51,6 +51,16 @@ def draw_label(screen, text, x, y):
     text_surface = font.render(text, True, BLACK)
     screen.blit(text_surface, (x, y))
 
+def draw_color_indicator(screen, color, x, y, size=50):
+    color_map = {
+        "red": RED,
+        "blue": BLUE, 
+        "green": GREEN,
+        "yellow": YELLOW
+    }
+    pygame.draw.rect(screen, color_map[color], (x, y, size, size))
+    pygame.draw.rect(screen, BLACK, (x, y, size, size), 2)  # Border
+
 def choose_color():
     choosing_color = True
     chosen_color = None
@@ -85,6 +95,36 @@ def choose_color():
         clock.tick(30)
 
     return chosen_color
+
+def show_win_screen(screen, winner_name):
+    running = True
+    while running:
+        screen.fill(WHITE)
+        
+        # Draw winner text
+        font = pygame.font.Font(None, 74)
+        text = font.render(f"{winner_name} Wins!", True, BLACK)
+        text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
+        screen.blit(text, text_rect)
+        
+        # Draw exit button
+        draw_button(screen, RED, WIDTH // 2 - button_width // 2, 
+                   HEIGHT // 2 + 50, button_width, button_height, "Exit")
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_x, mouse_y = event.pos
+                # Check if exit button clicked
+                if (WIDTH // 2 - button_width // 2 <= mouse_x <= WIDTH // 2 + button_width // 2 and
+                    HEIGHT // 2 + 50 <= mouse_y <= HEIGHT // 2 + 50 + button_height):
+                    pygame.quit()
+                    sys.exit()
+        
+        pygame.display.flip()
+        clock.tick(30)
 
 def main():
     running = True
@@ -144,7 +184,7 @@ def main():
         pygame.display.flip()
         clock.tick(30)
 
-    # Start the game
+    # Start game
     deck, discard_pile, player1_hand, player2_hand = start_game()
     turn_order = [player1_hand, player2_hand]
     current_index = 0
@@ -174,39 +214,48 @@ def main():
                                 played_card = card
                                 hand.remove(played_card)
                                 discard_pile.append(played_card)
+                                ## to see card play in console
                                 print(f"Player {current_index + 1} played: {played_card}")
+                                card_played_this_turn = True
                                 if "Wild_Draw" in played_card:
                                     chosen_color = choose_color()
-                                    discard_pile[-1] = f"{chosen_color}_Wild Draw"
+                                    discard_pile[-1] = f"{chosen_color}_Wild_Draw"
+                                    # Add 4 cards to other player's hand
+                                    next_player_hand = player2_hand if show_player1_hand else player1_hand
+                                    for _ in range(4):
+                                        new_card = draw_card(deck)
+                                        next_player_hand.append(new_card)
+                                    # Skip their turn by playing another turn
+                                    card_played_this_turn = True
+                                    show_player1_hand = not show_player1_hand
+                                    current_index = (current_index + 1) % len(turn_order)
+                                    played_card = None
                                 elif "Wild" in played_card:
                                     chosen_color = choose_color()
                                     discard_pile[-1] = f"{chosen_color}_Wild"
-                                card_played_this_turn = True
-
-                                if not hand:
-                                    font = pygame.font.Font(None, 72)
-                                    win_text = f"Player {current_index + 1} wins!"
-                                    text_surface = font.render(win_text, True, BLACK)
-                                    text_rect = text_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-                                    screen.fill(WHITE)
-                                    screen.blit(text_surface, text_rect)
-                                    pygame.display.flip()
-                                    pygame.time.wait(3000)
-                                    running = False
+                                    card_played_this_turn = True
+                                if is_reverse_card(played_card):
+                                    card_played_this_turn = False
+                                if len(hand) == 0:  # Check if player has won
+                                    winner = player1_name if show_player1_hand else player2_name
+                                    show_win_screen(screen, winner)
                                 break
 
                 # Check if the "Take Card" button is clicked
                 if 50 <= mouse_x <= 50 + button_width and HEIGHT // 2 - button_height // 2 <= mouse_y <= HEIGHT // 2 + button_height // 2:
-                    if not card_played_this_turn:
+                    if not card_played_this_turn:  # Only allow drawing if no card was played
                         new_card = draw_card(deck)
                         hand.append(new_card)
-                        if can_play(new_card, discard_pile[-1]):
-                            card_played_this_turn = True # No extra card can be taken
+                        # Automatically end turn after drawing
+                        show_player1_hand = not show_player1_hand
+                        current_index = (current_index + 1) % len(turn_order)
+                        played_card = None
+                        card_played_this_turn = False
 
                 # Check if the "Next Turn" button is clicked
                 if 50 <= mouse_x <= 50 + button_width and HEIGHT // 2 - button_height // 2 - 60 <= mouse_y <= HEIGHT // 2 - button_height // 2 - 60 + button_height:
                     if played_card and any(keyword in played_card for keyword in ["Reverse", "Skip", "Draw", "Wild_Draw"]):
-                        current_index = process_special_card(played_card, turn_order, [player1_hand, player2_hand], current_index)
+                        current_index = is_reverse_card(played_card, turn_order, [player1_hand, player2_hand], current_index)
                     show_player1_hand = not show_player1_hand
                     current_index = (current_index + 1) % len(turn_order)
                     played_card = None
@@ -234,6 +283,11 @@ def main():
             top_card_image = pygame.image.load(f"./files/{top_card}.png")
         top_card_image = pygame.transform.scale(top_card_image, (card_width, card_height))
         screen.blit(top_card_image, (WIDTH // 2 - card_width // 2, HEIGHT // 2 - card_height // 2))
+
+        # Add color indicator for wild cards
+        if "Wild" in top_card:
+            color = top_card.split("_")[0]  # Get color from the card name
+            draw_color_indicator(screen, color, WIDTH // 2 + card_width // 2 + 20, HEIGHT // 2 - 25)
 
         # Draw "Take Card" button
         draw_button(screen, BLUE, 50, HEIGHT // 2 - button_height // 2, button_width, button_height, "Take Card")
