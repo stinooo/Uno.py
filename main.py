@@ -108,6 +108,13 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT and scroll_offset < 0:
+                    scroll_offset += 20
+                elif event.key == pygame.K_RIGHT and scroll_offset > -(len(hand) * (card_width + 10) - WIDTH):
+                    scroll_offset -= 20
+
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = event.pos
                 if WIDTH // 2 - button_width // 2 <= mouse_x <= WIDTH // 2 + button_width // 2:
@@ -175,16 +182,31 @@ def main():
                                     chosen_color = choose_color()
                                     discard_pile[-1] = f"{chosen_color}_Wild"
                                 card_played_this_turn = True
+
+                                if not hand:
+                                    font = pygame.font.Font(None, 72)
+                                    win_text = f"Player {current_index + 1} wins!"
+                                    text_surface = font.render(win_text, True, BLACK)
+                                    text_rect = text_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+                                    screen.fill(WHITE)
+                                    screen.blit(text_surface, text_rect)
+                                    pygame.display.flip()
+                                    pygame.time.wait(3000)
+                                    running = False
                                 break
 
                 # Check if the "Take Card" button is clicked
                 if 50 <= mouse_x <= 50 + button_width and HEIGHT // 2 - button_height // 2 <= mouse_y <= HEIGHT // 2 + button_height // 2:
-                    new_card = draw_card(deck)
-                    hand.append(new_card)
-                    card_played_this_turn = True
+                    if not card_played_this_turn:
+                        new_card = draw_card(deck)
+                        hand.append(new_card)
+                        if can_play(new_card, discard_pile[-1]):
+                            card_played_this_turn = True # No extra card can be taken
 
                 # Check if the "Next Turn" button is clicked
                 if 50 <= mouse_x <= 50 + button_width and HEIGHT // 2 - button_height // 2 - 60 <= mouse_y <= HEIGHT // 2 - button_height // 2 - 60 + button_height:
+                    if played_card and any(keyword in played_card for keyword in ["Reverse", "Skip", "Draw", "Wild_Draw"]):
+                        current_index = process_special_card(played_card, turn_order, [player1_hand, player2_hand], current_index)
                     show_player1_hand = not show_player1_hand
                     current_index = (current_index + 1) % len(turn_order)
                     played_card = None

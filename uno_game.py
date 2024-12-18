@@ -46,7 +46,7 @@ def start_game():
     discard_pile = [draw_card(deck)]
     return deck, discard_pile, player1_hand, player2_hand
 
-def render_hand(screen, hand, x, y, mouse_x, mouse_y):
+def render_hand(screen, hand, x, y, mouse_x, mouse_y, scroll_offset):
     card_images = {}
     card_width = 200
     card_height = 300
@@ -55,7 +55,7 @@ def render_hand(screen, hand, x, y, mouse_x, mouse_y):
         if card not in card_images:
             card_image = pygame.image.load(f"./files/{card}.png")
             card_images[card] = pygame.transform.scale(card_image, (card_width, card_height))
-        card_x = x + i * (card_width + 10)
+        card_x = x + i * (card_width + 10) + scroll_offset
         card_y = y
         if card_x <= mouse_x <= card_x + card_width and card_y <= mouse_y <= card_y + card_height:
             card_y -= 10  # Move the card up when hovered
