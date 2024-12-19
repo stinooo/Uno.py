@@ -207,7 +207,7 @@ def main():
 
                 if not card_played_this_turn:
                     for i, card in enumerate(hand):
-                        card_x = WIDTH // 2 - (len(hand) * (card_width + 10)) // 2 + i * (card_width + 10) + scroll_offset
+                        card_x = WIDTH // 2 - (len(hand) * (card_width + 10)) // 2 + i * (card_width + 10)
                         card_y = HEIGHT - card_height - 20 if show_player1_hand else 20
                         if card_x <= mouse_x <= card_x + card_width and card_y <= mouse_y <= card_y + card_height:
                             if can_play(card, discard_pile[-1]):
