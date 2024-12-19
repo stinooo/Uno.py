@@ -291,10 +291,13 @@ def main():
 
                 # Check if the "Next Turn" button is clicked
                 if 50 <= mouse_x <= 50 + button_width and HEIGHT // 2 - button_height // 2 - 60 <= mouse_y <= HEIGHT // 2 - button_height // 2 - 60 + button_height:
-                    if played_card and any(keyword in played_card for keyword in ["Reverse", "Skip", "Draw", "Wild_Draw"]):
-                        if is_reverse_card(played_card):
-                            
-                            pass
+                    # Als er geen kaart gespeeld is, trek automatisch een kaart
+                    if not card_played_this_turn:
+                        new_card = draw_card(deck)
+                        hand = player1_hand if show_player1_hand else player2_hand
+                        hand.append(new_card)
+                        print(f"Player {current_index + 1} drew a card: {new_card}")
+    
                     show_player1_hand = not show_player1_hand
                     current_index = (current_index + 1) % len(turn_order)
                     played_card = None
