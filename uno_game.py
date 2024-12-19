@@ -46,7 +46,7 @@ def start_game():
     discard_pile = [draw_card(deck)]
     return deck, discard_pile, player1_hand, player2_hand
 
-def render_hand(screen, hand, x, y, mouse_x, mouse_y, scroll_offset):
+def render_hand(screen, hand, x, y, mouse_x, mouse_y):
     card_images = {}
     base_card_width = 200  # Original width
     base_card_height = 300  # Original height
@@ -112,7 +112,7 @@ def can_play(card, top_card):
 def is_reverse_card(card):
     if card is None:
         return False
-    if "skip" in card:
+    if "Skip" in card:
         return True
     if "Reverse"in card:
         return True

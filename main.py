@@ -54,12 +54,17 @@ def draw_label(screen, text, x, y):
 def draw_color_indicator(screen, color, x, y, size=50):
     color_map = {
         "red": RED,
-        "blue": BLUE, 
+        "blue": BLUE,
         "green": GREEN,
         "yellow": YELLOW
     }
-    pygame.draw.rect(screen, color_map[color], (x, y, size, size))
-    pygame.draw.rect(screen, BLACK, (x, y, size, size), 2)  # Border
+    if color not in color_map:
+        # Handle invalid or unspecified colors (like 'Wild')
+        pygame.draw.rect(screen, WHITE, (x, y, size, size))  # Default to white background
+        pygame.draw.rect(screen, BLACK, (x, y, size, size), 2)  # Border
+    else:
+        pygame.draw.rect(screen, color_map[color], (x, y, size, size))
+        pygame.draw.rect(screen, BLACK, (x, y, size, size), 2)  # Border
 
 def choose_color():
     choosing_color = True
@@ -134,7 +139,7 @@ def main():
 
     while running:
         screen.fill(WHITE)
-
+        
         # Draw labels
         draw_label(screen, "Player 1 Name:", WIDTH // 2 - input_box_width // 2 - 200, HEIGHT // 2 - 100)
         draw_label(screen, "Player 2 Name:", WIDTH // 2 - input_box_width // 2 - 200, HEIGHT // 2)
@@ -148,12 +153,6 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT and scroll_offset < 0:
-                    scroll_offset += 20
-                elif event.key == pygame.K_RIGHT and scroll_offset > -(len(hand) * (card_width + 10) - WIDTH):
-                    scroll_offset -= 20
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = event.pos
@@ -169,6 +168,7 @@ def main():
                         active_input = "player1"
                     elif HEIGHT // 2 <= mouse_y <= HEIGHT // 2 + input_box_height:
                         active_input = "player2"
+
             elif event.type == pygame.KEYDOWN:
                 if active_input == "player1":
                     if event.key == pygame.K_BACKSPACE:
@@ -234,6 +234,43 @@ def main():
                                     chosen_color = choose_color()
                                     discard_pile[-1] = f"{chosen_color}_Wild"
                                     card_played_this_turn = True
+                                elif "red_Draw" in played_card: 
+                                    next_player_hand = player2_hand if show_player1_hand else player1_hand
+                                    for _ in range(2):
+                                        new_card = draw_card(deck)
+                                        next_player_hand.append(new_card)
+                                    # Sla de beurt over
+                                    show_player1_hand = not show_player1_hand
+                                    current_index = (current_index + 1) % len(turn_order)
+                                    played_card = None
+                                elif "blue_Draw" in played_card: 
+                                    next_player_hand = player2_hand if show_player1_hand else player1_hand
+                                    for _ in range(2):
+                                        new_card = draw_card(deck)
+                                        next_player_hand.append(new_card)
+                                    # Sla de beurt over
+                                    show_player1_hand = not show_player1_hand
+                                    current_index = (current_index + 1) % len(turn_order)
+                                    played_card = None
+                                elif "yellow_Draw" in played_card: 
+                                    next_player_hand = player2_hand if show_player1_hand else player1_hand
+                                    for _ in range(2):
+                                        new_card = draw_card(deck)
+                                        next_player_hand.append(new_card)
+                                    # Sla de beurt over
+                                    show_player1_hand = not show_player1_hand
+                                    current_index = (current_index + 1) % len(turn_order)
+                                    played_card = None
+                                elif "green_Draw" in played_card: 
+                                    next_player_hand = player2_hand if show_player1_hand else player1_hand
+                                    for _ in range(2):
+                                        new_card = draw_card(deck)
+                                        next_player_hand.append(new_card)
+                                    # Sla de beurt over
+                                    show_player1_hand = not show_player1_hand
+                                    current_index = (current_index + 1) % len(turn_order)
+                                    played_card = None
+
                                 if is_reverse_card(played_card):
                                     card_played_this_turn = False
                                 if len(hand) == 0:  # Check if player has won
@@ -255,7 +292,9 @@ def main():
                 # Check if the "Next Turn" button is clicked
                 if 50 <= mouse_x <= 50 + button_width and HEIGHT // 2 - button_height // 2 - 60 <= mouse_y <= HEIGHT // 2 - button_height // 2 - 60 + button_height:
                     if played_card and any(keyword in played_card for keyword in ["Reverse", "Skip", "Draw", "Wild_Draw"]):
-                        current_index = is_reverse_card(played_card, turn_order, [player1_hand, player2_hand], current_index)
+                        if is_reverse_card(played_card):
+                            
+                            pass
                     show_player1_hand = not show_player1_hand
                     current_index = (current_index + 1) % len(turn_order)
                     played_card = None
@@ -271,9 +310,9 @@ def main():
 
         # Render hands
         if show_player1_hand:
-            render_hand(screen, player1_hand, WIDTH // 2 - (len(player1_hand) * (card_width + 10)) // 2 + scroll_offset, HEIGHT - card_height - 20, mouse_x, mouse_y)
+            render_hand(screen, player1_hand, WIDTH // 2 - (len(player1_hand) * (card_width + 10)) // 2, HEIGHT - card_height - 20, mouse_x, mouse_y)
         else:
-            render_hand(screen, player2_hand, WIDTH // 2 - (len(player2_hand) * (card_width + 10)) // 2 + scroll_offset, 20, mouse_x, mouse_y)
+            render_hand(screen, player2_hand, WIDTH // 2 - (len(player2_hand) * (card_width + 10)) // 2, 20, mouse_x, mouse_y)
 
         # Render top card of discard pile
         top_card = discard_pile[-1]
@@ -287,6 +326,8 @@ def main():
         # Add color indicator for wild cards
         if "Wild" in top_card:
             color = top_card.split("_")[0]  # Get color from the card name
+            if color not in ["red", "blue", "green", "yellow"]:
+                color = "white"  # Default for unspecified colors
             draw_color_indicator(screen, color, WIDTH // 2 + card_width // 2 + 20, HEIGHT // 2 - 25)
 
         # Draw "Take Card" button
