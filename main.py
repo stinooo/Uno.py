@@ -1,6 +1,6 @@
 import pygame
 import sys
-from uno_game import is_reverse_card, start_game, render_hand, draw_card, can_play
+from uno_game import is_reverse_or_skip_card, start_game, render_hand, draw_card, can_play
 
 # Initialize Pygame
 pygame.init()
@@ -191,7 +191,6 @@ def main():
     running = True
     show_player1_hand = True
     played_card = None
-    scroll_offset = 0
     card_played_this_turn = False
 
     while running:
@@ -271,7 +270,7 @@ def main():
                                     current_index = (current_index + 1) % len(turn_order)
                                     played_card = None
 
-                                if is_reverse_card(played_card):
+                                if is_reverse_or_skip_card(played_card):
                                     card_played_this_turn = False
                                 if len(hand) == 0:  # Check if player has won
                                     winner = player1_name if show_player1_hand else player2_name
@@ -297,17 +296,11 @@ def main():
                         hand = player1_hand if show_player1_hand else player2_hand
                         hand.append(new_card)
                         print(f"Player {current_index + 1} drew a card: {new_card}")
-    
+                    # Automatically end turn after drawing
                     show_player1_hand = not show_player1_hand
                     current_index = (current_index + 1) % len(turn_order)
                     played_card = None
                     card_played_this_turn = False
-
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    scroll_offset += 20
-                elif event.key == pygame.K_RIGHT:
-                    scroll_offset -= 20
 
         screen.fill(WHITE)
 

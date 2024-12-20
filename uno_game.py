@@ -123,7 +123,7 @@ def can_play(card, top_card):
     except:
         return False
 
-def is_reverse_card(card):
+def is_reverse_or_skip_card(card):
     if card is None:
         return False
     if "Skip" in card:
