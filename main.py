@@ -1,7 +1,7 @@
 #READ RULES OF UNO.txt
 import pygame
 import sys
-from uno_game import restart_game, is_reverse_or_skip_card, start_game, render_hand, draw_card, can_play
+from uno_game import is_reverse_or_skip_card, start_game, render_hand, draw_card, can_play
 
 # Initialize Pygame
 pygame.init()
