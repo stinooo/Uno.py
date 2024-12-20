@@ -1,0 +1,34 @@
+Goal:
+You start with 7 cards your goal is to play your hand empty faster than your opponent.
+
+Rules/Mechanics:
+FILL the names to start playing.
+CLICK next turn if u want to give turn to the next player.
+CLICk take card if u want a card
+player 2 above.
+player 1 at the bottem.
+You can throw a card if it is the color, number, of symbol otherwise if you dont have any cards to play you wil need to "Take a card".
+If you play "Skip" card of "Reverse" card then you play directly second card if not you will draw a card after clicking next turn.
+If you play "+2 Draw" card then in opponent's turn your opponent will draw 2 cards and he will be not able to throw a card so he will need to click on next turn.
+If you play "+4 Wild Card" you can pick a color but cant play directly another card with this color and your opponent on his turn will draw 4 cards and he will be not able to throw a card so he need to use next turn.
+If more then 20 cards ff.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+usefull
+
+https://www.youtube.com/watch?v=GX_fsDz4j8A how to resize screen
+
+https://www.youtube.com/watch?v=GMBqjxcKogA HOW TO MAKE A MENU SCREEN IN PYGAME! use this to make menu screen! used code and learn how to use hover
+

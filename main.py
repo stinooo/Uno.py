@@ -1,3 +1,4 @@
+#READ RULES OF UNO.txt
 import pygame
 import sys
 from uno_game import is_reverse_or_skip_card, start_game, render_hand, draw_card, can_play
@@ -8,7 +9,7 @@ pygame.init()
 # Screen dimensions
 WIDTH, HEIGHT = 1600, 900
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Networked UNO Game")
+pygame.display.set_caption(" UNO Game")
 
 # Colors
 WHITE = (255, 255, 255)
@@ -129,7 +130,7 @@ def show_win_screen(screen, winner_name):
                     sys.exit()
         
         pygame.display.flip()
-        clock.tick(30)
+        
 
 def main():
     running = True
@@ -192,6 +193,7 @@ def main():
     show_player1_hand = True
     played_card = None
     card_played_this_turn = False
+    draw_colors = ["red_Draw", "blue_Draw", "yellow_Draw", "green_Draw"]
 
     while running:
         mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -205,26 +207,23 @@ def main():
                     hand = player2_hand
 
                 if not card_played_this_turn:
-                    for i, card in enumerate(hand):
-                        card_x = WIDTH // 2 - (len(hand) * (card_width + 10)) // 2 + i * (card_width + 10)
-                        card_y = HEIGHT - card_height - 20 if show_player1_hand else 20
-                        if card_x <= mouse_x <= card_x + card_width and card_y <= mouse_y <= card_y + card_height:
+                    hitboxes = render_hand(screen, hand, WIDTH // 2, HEIGHT - card_height if show_player1_hand else 20, mouse_x, mouse_y)
+                    for i, (card_x, card_y, hitbox_width, hitbox_height) in enumerate(hitboxes):
+                        if card_x <= mouse_x <= card_x + hitbox_width and card_y <= mouse_y <= card_y + hitbox_height:
+                            card = hand[i]
                             if can_play(card, discard_pile[-1]):
                                 played_card = card
                                 hand.remove(played_card)
                                 discard_pile.append(played_card)
-                                ## to see card play in console
                                 print(f"Player {current_index + 1} played: {played_card}")
                                 card_played_this_turn = True
                                 if "Wild_Draw" in played_card:
                                     chosen_color = choose_color()
                                     discard_pile[-1] = f"{chosen_color}_Wild_Draw"
-                                    # Add 4 cards to other player's hand
                                     next_player_hand = player2_hand if show_player1_hand else player1_hand
                                     for _ in range(4):
                                         new_card = draw_card(deck)
                                         next_player_hand.append(new_card)
-                                    # Skip their turn by playing another turn
                                     card_played_this_turn = True
                                     show_player1_hand = not show_player1_hand
                                     current_index = (current_index + 1) % len(turn_order)
@@ -233,46 +232,17 @@ def main():
                                     chosen_color = choose_color()
                                     discard_pile[-1] = f"{chosen_color}_Wild"
                                     card_played_this_turn = True
-                                elif "red_Draw" in played_card: 
+                                elif any(color_draw in played_card for color_draw in draw_colors):
                                     next_player_hand = player2_hand if show_player1_hand else player1_hand
                                     for _ in range(2):
                                         new_card = draw_card(deck)
                                         next_player_hand.append(new_card)
-                                    # Sla de beurt over
                                     show_player1_hand = not show_player1_hand
                                     current_index = (current_index + 1) % len(turn_order)
                                     played_card = None
-                                elif "blue_Draw" in played_card: 
-                                    next_player_hand = player2_hand if show_player1_hand else player1_hand
-                                    for _ in range(2):
-                                        new_card = draw_card(deck)
-                                        next_player_hand.append(new_card)
-                                    # Sla de beurt over
-                                    show_player1_hand = not show_player1_hand
-                                    current_index = (current_index + 1) % len(turn_order)
-                                    played_card = None
-                                elif "yellow_Draw" in played_card: 
-                                    next_player_hand = player2_hand if show_player1_hand else player1_hand
-                                    for _ in range(2):
-                                        new_card = draw_card(deck)
-                                        next_player_hand.append(new_card)
-                                    # Sla de beurt over
-                                    show_player1_hand = not show_player1_hand
-                                    current_index = (current_index + 1) % len(turn_order)
-                                    played_card = None
-                                elif "green_Draw" in played_card: 
-                                    next_player_hand = player2_hand if show_player1_hand else player1_hand
-                                    for _ in range(2):
-                                        new_card = draw_card(deck)
-                                        next_player_hand.append(new_card)
-                                    # Sla de beurt over
-                                    show_player1_hand = not show_player1_hand
-                                    current_index = (current_index + 1) % len(turn_order)
-                                    played_card = None
-
                                 if is_reverse_or_skip_card(played_card):
                                     card_played_this_turn = False
-                                if len(hand) == 0:  # Check if player has won
+                                if len(hand) == 0:
                                     winner = player1_name if show_player1_hand else player2_name
                                     show_win_screen(screen, winner)
                                 break
@@ -312,10 +282,7 @@ def main():
 
         # Render top card of discard pile
         top_card = discard_pile[-1]
-        if "Wild" in top_card:
-            top_card_image = pygame.image.load("./files/Wild.png")
-        else:
-            top_card_image = pygame.image.load(f"./files/{top_card}.png")
+        top_card_image = pygame.image.load(f"./files/{top_card}.png")
         top_card_image = pygame.transform.scale(top_card_image, (card_width, card_height))
         screen.blit(top_card_image, (WIDTH // 2 - card_width // 2, HEIGHT // 2 - card_height // 2))
 
